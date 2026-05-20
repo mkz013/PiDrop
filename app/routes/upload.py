@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, current_app, flash, redirect, url_for
 from app.services.storage import StorageService
+from app.services.file_validator import FileValidator
+
 
 upload_bp = Blueprint("upload", __name__)
 
@@ -14,7 +16,7 @@ def upload_file():
     if "file" not in request.files:
         return jsonify({"error": "No file in request"}), 400
 
-    file     = request.files["file"]
+    file = request.files["file"]
     category = request.form.get("category", "documents")
 
     if file.filename == "":
@@ -22,6 +24,12 @@ def upload_file():
 
     if category not in ALLOWED_CATEGORIES:
         return jsonify({"error": "Invalid category"}), 400
+    
+    validator = FileValidator(current_app.config["ALLOWED_EXTENSIONS"])
+    is_valid, error = validator.validate(file.filename, category)
+
+    if not is_valid:
+        return jsonify({"error": error}), 400
 
     storage = StorageService(current_app.config["UPLOAD_ROOT"])
     record  = storage.save(
