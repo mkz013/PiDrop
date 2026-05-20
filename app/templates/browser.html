@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %} — {{ category|capitalize }}{% endblock %}
+
+{% block content %}
+<section style="max-width:1100px; margin:0 auto; padding:2rem 0 3rem;">
+  <div style="display:flex; justify-content:space-between; align-items:end; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <div>
+      <p style="color:var(--primary); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; margin-bottom:.45rem;">
+        PiDrop Library
+      </p>
+      <h1 style="font-size:clamp(1.8rem, 1.4rem + 1.4vw, 2.8rem); margin-bottom:.35rem;">
+        {{ category|capitalize }}
+      </h1>
+      <p style="color:var(--muted); font-size:.95rem;">
+        Browse stored files in this category.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      {% for cat in categories %}
+        <a href="/files/{{ cat }}"
+           style="padding:.55rem .8rem; border:1px solid var(--border); border-radius:.8rem;
+                  background:{% if cat == category %}var(--surface2){% else %}var(--surface){% endif %};
+                  color:{% if cat == category %}var(--text){% else %}var(--muted){% endif %};
+                  text-decoration:none; font-size:.85rem;">
+          {{ cat }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card" style="padding:1rem 1rem .5rem;">
+    {% if files %}
+      <table>
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>Source IP</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in files %}
+          <tr>
+            <td>
+              <div style="font-weight:600;">{{ f.filename }}</div>
+              <div style="color:var(--muted); font-size:.78rem;">{{ f.id }}</div>
+            </td>
+            <td>{{ (f.size_bytes / 1024) | round(1) }} KB</td>
+            <td style="color:var(--muted); font-size:.82rem;">
+              {{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+            </td>
+            <td style="color:var(--muted); font-size:.82rem;">{{ f.uploaded_ip }}</td>
+            <td>
+              <a href="/dl/{{ f.id }}"
+                 style="display:inline-block; padding:.45rem .7rem; border-radius:.7rem;
+                        background:var(--primary); color:white; text-decoration:none; font-size:.82rem; font-weight:600;">
+                Download
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div style="padding:2rem 1rem; text-align:center; color:var(--muted);">
+        No files in this category yet.
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
