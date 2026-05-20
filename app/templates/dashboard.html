@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %} — Dashboard{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:1.5rem; font-size:1.4rem;">Dashboard</h2>
+
+<!-- Category tiles -->
+<div class="grid-5" style="margin-bottom:2rem;">
+  {% for cat in categories %}
+  <div class="card" style="text-align:center;">
+    <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase;
+                letter-spacing:.05em; margin-bottom:.5rem;">{{ cat }}</div>
+    <div style="font-size:1.8rem; font-weight:700; color:var(--primary);">
+      {{ stats[cat].count }}
+    </div>
+    <div style="font-size:0.75rem; color:var(--muted); margin-top:.25rem;">
+      {{ (stats[cat].size / 1024 / 1024) | round(2) }} MB
+    </div>
+    <a href="/files/{{ cat }}" style="font-size:0.8rem; display:block; margin-top:.75rem;">
+      Browse →
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Total -->
+<p style="color:var(--muted); font-size:0.875rem; margin-bottom:1.5rem;">
+  Total stored: <strong style="color:var(--text);">
+    {{ (total_size / 1024 / 1024) | round(2) }} MB
+  </strong>
+</p>
+
+<!-- Recent uploads -->
+<div class="card">
+  <h3 style="font-size:1rem; margin-bottom:1rem;">Recent Uploads</h3>
+  {% if recent %}
+  <table>
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>Category</th>
+        <th>Size</th>
+        <th>IP</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in recent %}
+      <tr>
+        <td>{{ f.filename }}</td>
+        <td><span class="badge badge-{{ f.category }}">{{ f.category }}</span></td>
+        <td>{{ (f.size_bytes / 1024) | round(1) }} KB</td>
+        <td style="color:var(--muted); font-size:0.8rem;">{{ f.uploaded_ip }}</td>
+        <td style="color:var(--muted); font-size:0.8rem;">{{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--muted); font-size:0.875rem;">No uploads yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

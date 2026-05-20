@@ -1,0 +1,8 @@
+flask>=3.0
+flask-sqlalchemy
+flask-login
+werkzeug>=3.0
+python-magic
+qrcode[pil]
+bcrypt
+gunicorn

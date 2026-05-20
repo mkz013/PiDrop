@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %} — Upload{% endblock %}
+
+{% block content %}
+<section class="upload-shell">
+  <div class="upload-header">
+    <p class="eyebrow">PiDrop Transfer</p>
+    <h1>Upload Files</h1>
+    <p class="upload-subtitle">
+      Private browser-based upload for documents, portfolio assets, media, and controlled samples.
+    </p>
+  </div>
+
+  <div class="upload-layout">
+    <div class="card upload-main-card">
+      <div class="section-head">
+        <div>
+          <h2>Select files</h2>
+          <p>Choose a category, then drag files in or browse manually.</p>
+        </div>
+      </div>
+
+      <label class="field-label" for="category">Category</label>
+      <select id="category" class="input-control">
+        {% for cat in categories | sort %}
+          <option value="{{ cat }}">{{ cat }}</option>
+        {% endfor %}
+      </select>
+
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">⇪</div>
+        <h3>Drop files here</h3>
+        <p>
+          Drag and drop files here or
+          <span class="dropzone-link">click to browse</span>
+        </p>
+        <input type="file" id="fileInput" multiple style="display:none;">
+      </div>
+
+      <div class="upload-actions">
+        <button id="uploadBtn" class="primary-btn" onclick="startUpload()">
+          Upload files
+        </button>
+      </div>
+
+      <div id="queue" class="queue"></div>
+    </div>
+
+    <aside class="card upload-side-card">
+      <h3>Transfer notes</h3>
+      <ul class="side-list">
+        <li>Use <strong>documents</strong> for PDFs, notes, spreadsheets, and text files.</li>
+        <li>Use <strong>portfolio</strong> for presentations, demos, screenshots, and project exports.</li>
+        <li>Use <strong>media</strong> for photos, audio, and video.</li>
+        <li>Use <strong>malware samples</strong> only for controlled self-made archives, never loose executables.</li>
+      </ul>
+
+      <div class="side-divider"></div>
+
+      <h3>Flow</h3>
+      <div class="mini-steps">
+        <div class="mini-step"><span>1</span><p>Pick category</p></div>
+        <div class="mini-step"><span>2</span><p>Add files</p></div>
+        <div class="mini-step"><span>3</span><p>Upload to PiDrop</p></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+const dropzone  = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const queue     = document.getElementById('queue');
+let files = [];
+
+// Click to browse
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+// Drag events
+dropzone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropzone.classList.add('is-dragging');
+});
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('is-dragging');
+});
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('is-dragging');
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(newFiles) {
+  files = [...files, ...newFiles];
+  renderQueue();
+}
+
+function renderQueue() {
+  queue.innerHTML = files.map((f, i) => `
+    <div id="item-${i}" class="queue-item">
+      <div class="queue-file">
+        <div class="queue-file-icon">📄</div>
+        <div>
+          <div class="queue-file-name">${f.name}</div>
+          <div class="queue-file-meta">${(f.size / 1024).toFixed(1)} KB</div>
+        </div>
+      </div>
+      <span id="status-${i}" class="queue-status">queued</span>
+    </div>
+  `).join('');
+}
+
+async function startUpload() {
+  if (!files.length) return;
+  const category = document.getElementById('category').value;
+
+  for (let i = 0; i < files.length; i++) {
+    const statusEl = document.getElementById(`status-${i}`);
+    statusEl.textContent = 'uploading...';
+    statusEl.className = 'queue-status status-uploading';
+
+    const form = new FormData();
+    form.append('file', files[i]);
+    form.append('category', category);
+
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (res.ok) {
+        statusEl.textContent = 'done';
+        statusEl.className = 'queue-status status-success';
+      } else {
+        statusEl.textContent = data.error || 'error';
+        statusEl.className = 'queue-status status-error';
+      }
+    } catch (err) {
+      statusEl.textContent = 'network error';
+      statusEl.className = 'queue-status status-error';
+    }
+  }
+
+  files = [];
+  setTimeout(() => { queue.innerHTML = ''; }, 2500);
+}
+</script>
+{% endblock %}
