@@ -2,7 +2,7 @@
 {% block title %} — {{ category|capitalize }}{% endblock %}
 
 {% block content %}
-<section style="max-width:1100px; margin:0 auto; padding:2rem 0 3rem;">
+<section style="max-width:1120px; margin:0 auto; padding:2rem 0 3rem;">
   <div style="display:flex; justify-content:space-between; align-items:end; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
     <div>
       <p style="color:var(--primary); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; margin-bottom:.45rem;">
@@ -11,129 +11,173 @@
       <h1 style="font-size:clamp(1.8rem, 1.4rem + 1.4vw, 2.8rem); margin-bottom:.35rem;">
         {{ category|capitalize }}
       </h1>
-      <p style="color:var(--muted); font-size:.95rem;">
-        Browse, download, and manage stored files in this category.
+      <p style="color:var(--muted); font-size:.95rem; max-width:60ch;">
+        Browse, preview, download, and manage stored files in this category.
       </p>
     </div>
 
     <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
       {% for cat in categories %}
         <a href="/files/{{ cat }}"
-           style="padding:.55rem .8rem; border:1px solid var(--border); border-radius:.8rem;
+           style="padding:.58rem .85rem; border:1px solid var(--border); border-radius:.8rem;
                   background:{% if cat == category %}var(--surface2){% else %}var(--surface){% endif %};
                   color:{% if cat == category %}var(--text){% else %}var(--muted){% endif %};
-                  text-decoration:none; font-size:.85rem; font-weight:{% if cat == category %}600{% else %}500{% endif %};">
+                  text-decoration:none; font-size:.85rem;
+                  font-weight:{% if cat == category %}600{% else %}500{% endif %};">
           {{ cat }}
         </a>
       {% endfor %}
     </div>
   </div>
 
+  {% if category == "samples" %}
+  <div style="margin-bottom:1rem; padding:.95rem 1rem; border:1px solid rgba(221,105,116,.22);
+              background:#2a1719; border-radius:.9rem;">
+    <p style="color:var(--error); font-size:.89rem; margin:0;">
+      Samples are treated as restricted files. They remain download-only and should not be previewed inline.
+    </p>
+  </div>
+  {% endif %}
+
   <div class="card" style="padding:1rem 1rem .5rem;">
     {% if files %}
-      <table>
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>Size</th>
-            <th>Uploaded</th>
-            <th>Source IP</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for f in files %}
-          {% set ext = f.filename.lower().split('.')[-1] if '.' in f.filename else '' %}
-          <tr>
-            <td>
-              <div style="display:flex; align-items:center; gap:.8rem;">
-                {% if category == "samples" %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:#3a1e1e; color:var(--error); flex-shrink:0; font-size:1.1rem;">
-                    ⚠
-                  </div>
-                {% elif ext in ["jpg", "jpeg", "png", "gif", "webp", "heic"] %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:#1e3a4a; color:var(--primary); flex-shrink:0; font-size:1.1rem;">
-                    🖼
-                  </div>
-                {% elif ext in ["mp4", "mov", "webm", "mp3", "wav", "m4a"] %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:#3a2e1e; color:var(--warning); flex-shrink:0; font-size:1.1rem;">
-                    🎞
-                  </div>
-                {% elif ext in ["pdf"] %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:var(--surface2); border:1px solid var(--border); flex-shrink:0; font-size:1.1rem;">
-                    📕
-                  </div>
-                {% elif ext in ["zip", "7z", "tar", "gz", "rar"] %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:#2e2a1e; color:#e8af34; flex-shrink:0; font-size:1.1rem;">
-                    🗜
-                  </div>
-                {% else %}
-                  <div style="width:52px; height:52px; border-radius:.8rem; display:grid; place-items:center;
-                              background:var(--surface2); border:1px solid var(--border); flex-shrink:0; font-size:1.1rem;">
-                    📄
-                  </div>
-                {% endif %}
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Category</th>
+              <th>Size</th>
+              <th>Uploaded</th>
+              <th>Source IP</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in files %}
+            {% set ext = f.filename.lower().split('.')[-1] if '.' in f.filename else '' %}
+            {% set can_view = category != "samples" and ext in ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "pdf", "txt", "md"] %}
+            <tr>
+              <td>
+                <div style="display:flex; align-items:center; gap:.8rem; min-width:260px;">
+                  {% if category == "samples" %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#3a1e1e; color:var(--error); flex-shrink:0; font-size:1.05rem;">
+                      ⚠
+                    </div>
+                  {% elif ext in ["jpg", "jpeg", "png", "gif", "webp", "heic", "bmp", "svg"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#1e3a4a; color:#7fd3e0; flex-shrink:0; font-size:1.05rem;">
+                      🖼
+                    </div>
+                  {% elif ext in ["mp4", "mov", "webm", "mp3", "wav", "m4a"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#3a2e1e; color:#f2c56d; flex-shrink:0; font-size:1.05rem;">
+                      🎞
+                    </div>
+                  {% elif ext in ["pdf"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#312126; color:#ff8f8f; flex-shrink:0; font-size:1.05rem;">
+                      📕
+                    </div>
+                  {% elif ext in ["zip", "7z", "tar", "gz", "rar"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#2e2a1e; color:#e8af34; flex-shrink:0; font-size:1.05rem;">
+                      🗜
+                    </div>
+                  {% elif ext in ["doc", "docx", "odt", "rtf"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#1f2c42; color:#8fb7ff; flex-shrink:0; font-size:1.05rem;">
+                      📝
+                    </div>
+                  {% elif ext in ["xls", "xlsx", "ods", "csv"] %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:#1e3527; color:#8ce2a3; flex-shrink:0; font-size:1.05rem;">
+                      📊
+                    </div>
+                  {% else %}
+                    <div style="width:52px; height:52px; border-radius:.85rem; display:grid; place-items:center;
+                                background:var(--surface2); border:1px solid var(--border); flex-shrink:0; font-size:1.05rem;">
+                      📄
+                    </div>
+                  {% endif %}
 
-                <div style="min-width:0;">
-                  <div style="font-weight:600; word-break:break-word;">{{ f.filename }}</div>
-                  <div style="color:var(--muted); font-size:.78rem; word-break:break-all;">
-                    {{ f.id }}
+                  <div style="min-width:0;">
+                    <div style="font-weight:600; word-break:break-word; line-height:1.35;">
+                      {{ f.filename }}
+                    </div>
+                    <div style="color:var(--muted); font-size:.76rem; word-break:break-all; margin-top:.18rem;">
+                      {{ f.id }}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
+              </td>
 
-            <td>{{ (f.size_bytes / 1024) | round(1) }} KB</td>
+              <td>
+                <span style="display:inline-block; padding:.3rem .55rem; border-radius:.65rem;
+                             background:var(--surface2); border:1px solid var(--border);
+                             color:var(--muted); font-size:.76rem; text-transform:capitalize;">
+                  {{ f.category }}
+                </span>
+              </td>
 
-            <td style="color:var(--muted); font-size:.82rem;">
-              {{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
-            </td>
+              <td style="white-space:nowrap;">
+                {% if f.size_bytes >= 1048576 %}
+                  {{ (f.size_bytes / 1048576) | round(2) }} MB
+                {% else %}
+                  {{ (f.size_bytes / 1024) | round(1) }} KB
+                {% endif %}
+              </td>
 
-            <td style="color:var(--muted); font-size:.82rem;">
-              {{ f.uploaded_ip or "-" }}
-            </td>
+              <td style="color:var(--muted); font-size:.82rem; white-space:nowrap;">
+                {{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
 
-            <td>
-              <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
-                <a href="/dl/{{ f.id }}"
-                   style="display:inline-block; padding:.45rem .7rem; border-radius:.7rem;
-                          background:var(--primary); color:white; text-decoration:none;
-                          font-size:.82rem; font-weight:600;">
-                  Download
-                </a>
+              <td style="color:var(--muted); font-size:.82rem; white-space:nowrap;">
+                {{ f.uploaded_ip or "-" }}
+              </td>
 
-                <form method="POST" action="/delete/{{ f.id }}" style="margin:0;">
-                  <button type="submit"
-                          style="padding:.45rem .7rem; border:none; border-radius:.7rem;
-                                 background:var(--error); color:white; font-size:.82rem;
-                                 font-weight:600; cursor:pointer;">
-                    Delete
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+              <td>
+                <div style="display:flex; gap:.45rem; align-items:center; flex-wrap:wrap; min-width:200px;">
+                  {% if can_view %}
+                    <a href="/view/{{ f.id }}" target="_blank"
+                       style="display:inline-block; padding:.45rem .72rem; border-radius:.7rem;
+                              background:var(--surface2); border:1px solid var(--border);
+                              color:var(--text); text-decoration:none; font-size:.82rem; font-weight:600;">
+                      View
+                    </a>
+                  {% endif %}
 
-      {% if category == "samples" %}
-      <div style="margin-top:1rem; padding:.9rem 1rem; border:1px solid rgba(221,105,116,.25);
-                  background:#2a1719; border-radius:.8rem;">
-        <p style="color:var(--error); font-size:.88rem; margin:0;">
-          Samples are treated as restricted files. They should remain download-only and not be previewed inline.
-        </p>
+                  <a href="/dl/{{ f.id }}"
+                     style="display:inline-block; padding:.45rem .72rem; border-radius:.7rem;
+                            background:var(--primary); color:white; text-decoration:none;
+                            font-size:.82rem; font-weight:600;">
+                    Download
+                  </a>
+
+                  <form method="POST" action="/delete/{{ f.id }}" style="margin:0;"
+                        onsubmit="return confirm('Delete this file?');">
+                    <button type="submit"
+                            style="padding:.45rem .72rem; border:none; border-radius:.7rem;
+                                   background:var(--error); color:white; font-size:.82rem;
+                                   font-weight:600; cursor:pointer;">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      {% endif %}
-
     {% else %}
-      <div style="padding:2rem 1rem; text-align:center; color:var(--muted);">
-        No files in this category yet.
+      <div style="padding:2.4rem 1rem; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:.5rem;">📂</div>
+        <div style="font-weight:600; margin-bottom:.35rem;">No files in this category yet</div>
+        <p style="color:var(--muted); margin:0; font-size:.92rem;">
+          Upload files first, then they will appear here for browsing and download.
+        </p>
       </div>
     {% endif %}
   </div>

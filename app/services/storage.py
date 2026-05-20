@@ -1,67 +1,113 @@
 import os
 import uuid
-import hashlib
+from datetime import datetime
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
+
 from app.extensions import db
 from app.models.file_record import FileRecord
 
-class StorageService:
 
+class StorageService:
     def __init__(self, upload_root):
         self.upload_root = upload_root
 
+    def _category_dir(self, category):
+        path = os.path.join(self.upload_root, category)
+        os.makedirs(path, exist_ok=True)
+        return path
+
     def save(self, file_stream, original_name, category, ip=None):
-        """
-        Sanitize filename, generate UUID storage name,
-        compute SHA256, write to disk, persist to DB.
-        Returns the FileRecord.
-        """
-        safe_name  = secure_filename(original_name)
-        stored_as  = str(uuid.uuid4())
-        dest_dir   = os.path.join(self.upload_root, category)
-        dest_path  = os.path.join(dest_dir, stored_as)
+        safe_name = secure_filename(original_name)
+        ext = os.path.splitext(safe_name)[1].lower()
+        file_id = str(uuid.uuid4())
+        stored_as = f"{file_id}{ext}"
 
-        os.makedirs(dest_dir, exist_ok=True)
+        category_dir = self._category_dir(category)
+        file_path = os.path.join(category_dir, stored_as)
 
-        # Write file and compute hash in one pass
-        sha256 = hashlib.sha256()
-        size   = 0
-        with open(dest_path, "wb") as f:
-            while chunk := file_stream.read(8192):
-                f.write(chunk)
-                sha256.update(chunk)
-                size += len(chunk)
+        data = file_stream.read()
+        with open(file_path, "wb") as f:
+            f.write(data)
 
         record = FileRecord(
-            filename    = safe_name,
-            stored_as   = stored_as,
-            category    = category,
-            size_bytes  = size,
-            sha256      = sha256.hexdigest(),
-            uploaded_ip = ip,
+            id=file_id,
+            filename=safe_name,
+            stored_as=stored_as,
+            category=category,
+            size_bytes=len(data),
+            uploaded_at=datetime.utcnow(),
+            uploaded_ip=ip,
         )
+
         db.session.add(record)
         db.session.commit()
         return record
 
-    def list_category(self, category):
-        return FileRecord.query.filter_by(category=category)\
-                               .order_by(FileRecord.uploaded_at.desc()).all()
+    def list_by_category(self, category):
+        return (
+            FileRecord.query
+            .filter_by(category=category)
+            .order_by(FileRecord.uploaded_at.desc())
+            .all()
+        )
+
+    def recent_files(self, limit=10):
+        return (
+            FileRecord.query
+            .order_by(FileRecord.uploaded_at.desc())
+            .limit(limit)
+            .all()
+        )
 
     def get(self, file_id):
-        return FileRecord.query.get(file_id)
+        return FileRecord.query.filter_by(id=file_id).first()
+
+    def resolve_path(self, record):
+        return os.path.join(self.upload_root, record.category, record.stored_as)
+
+    def total_size(self):
+        total = db.session.query(func.coalesce(func.sum(FileRecord.size_bytes), 0)).scalar()
+        return int(total or 0)
+
+    def total_files(self):
+        return db.session.query(func.count(FileRecord.id)).scalar() or 0
+
+    def category_counts(self):
+        rows = (
+            db.session.query(FileRecord.category, func.count(FileRecord.id))
+            .group_by(FileRecord.category)
+            .all()
+        )
+        return {category: count for category, count in rows}
+
+    def media_neighbors(self, file_id, category):
+        files = (
+            FileRecord.query
+            .filter_by(category=category)
+            .order_by(FileRecord.uploaded_at.desc())
+            .all()
+        )
+
+        ids = [f.id for f in files]
+        if file_id not in ids:
+            return None, None
+
+        idx = ids.index(file_id)
+        prev_id = ids[idx - 1] if idx > 0 else None
+        next_id = ids[idx + 1] if idx < len(ids) - 1 else None
+        return prev_id, next_id
 
     def delete(self, file_id):
         record = self.get(file_id)
         if not record:
             return False
-        path = record.full_path(self.upload_root)
-        if os.path.exists(path):
-            os.remove(path)
+
+        file_path = self.resolve_path(record)
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         db.session.delete(record)
         db.session.commit()
         return True
-
-    def total_size(self):
-        result = db.session.query(db.func.sum(FileRecord.size_bytes)).scalar()
-        return result or 0

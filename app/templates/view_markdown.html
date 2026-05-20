@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %} — View {{ file.filename }}{% endblock %}
+
+{% block content %}
+<section style="max-width:1000px; margin:0 auto; padding:1.5rem 0 2.5rem;">
+  <div style="display:flex; justify-content:space-between; gap:1rem; align-items:end; flex-wrap:wrap; margin-bottom:1rem;">
+    <div>
+      <p style="color:var(--primary); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; margin-bottom:.35rem;">
+        Document Viewer
+      </p>
+      <h1 style="font-size:clamp(1.35rem, 1.1rem + 1.2vw, 2.2rem); margin-bottom:.35rem; word-break:break-word;">
+        {{ file.filename }}
+      </h1>
+      <p style="color:var(--muted); font-size:.9rem;">
+        {% if is_markdown %}Structured Markdown preview{% else %}Text file preview{% endif %}
+      </p>
+    </div>
+
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      {% if prev_id %}
+        <a href="/view/{{ prev_id }}"
+           style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                  background:var(--surface2); border:1px solid var(--border);
+                  color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+          Previous
+        </a>
+      {% endif %}
+
+      {% if next_id %}
+        <a href="/view/{{ next_id }}"
+           style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                  background:var(--surface2); border:1px solid var(--border);
+                  color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+          Next
+        </a>
+      {% endif %}
+
+      <a href="/dl/{{ file.id }}"
+         style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                background:var(--primary); color:white; text-decoration:none; font-size:.84rem; font-weight:600;">
+        Download
+      </a>
+
+      <a href="/files/{{ file.category }}"
+         style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                background:var(--surface2); border:1px solid var(--border);
+                color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+        Back
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="padding:1.4rem;">
+    <article style="line-height:1.75; font-size:1rem; word-break:break-word;">
+      {{ rendered_html|safe }}
+    </article>
+  </div>
+</section>
+
+<script>
+document.addEventListener("keydown", function (e) {
+  {% if prev_id %}
+  if (e.key === "ArrowLeft") {
+    window.location.href = "/view/{{ prev_id }}";
+  }
+  {% endif %}
+
+  {% if next_id %}
+  if (e.key === "ArrowRight") {
+    window.location.href = "/view/{{ next_id }}";
+  }
+  {% endif %}
+});
+</script>
+{% endblock %}

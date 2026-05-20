@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %} — View {{ file.filename }}{% endblock %}
+
+{% block content %}
+<section style="max-width:1200px; margin:0 auto; padding:1.5rem 0 2.5rem;">
+  <div style="display:flex; justify-content:space-between; gap:1rem; align-items:end; flex-wrap:wrap; margin-bottom:1rem;">
+    <div>
+      <p style="color:var(--primary); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; margin-bottom:.35rem;">
+        Media Viewer
+      </p>
+      <h1 style="font-size:clamp(1.35rem, 1.1rem + 1.2vw, 2.2rem); margin-bottom:.35rem; word-break:break-word;">
+        {{ file.filename }}
+      </h1>
+      <p style="color:var(--muted); font-size:.9rem;">
+        Category: {{ file.category }} · {{ (file.size_bytes / 1048576) | round(2) if file.size_bytes >= 1048576 else (file.size_bytes / 1024) | round(1) }} {% if file.size_bytes >= 1048576 %}MB{% else %}KB{% endif %}
+      </p>
+    </div>
+
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      {% if prev_id %}
+        <a href="/view/{{ prev_id }}"
+           style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                  background:var(--surface2); border:1px solid var(--border);
+                  color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+          Previous
+        </a>
+      {% endif %}
+
+      {% if next_id %}
+        <a href="/view/{{ next_id }}"
+           style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                  background:var(--surface2); border:1px solid var(--border);
+                  color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+          Next
+        </a>
+      {% endif %}
+
+      <a href="/dl/{{ file.id }}"
+         style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                background:var(--primary); color:white; text-decoration:none; font-size:.84rem; font-weight:600;">
+        Download
+      </a>
+
+      <a href="/files/{{ file.category }}"
+         style="display:inline-block; padding:.55rem .85rem; border-radius:.75rem;
+                background:var(--surface2); border:1px solid var(--border);
+                color:var(--text); text-decoration:none; font-size:.84rem; font-weight:600;">
+        Back
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="padding:1rem;">
+    {% if media_type == "image" %}
+      <div style="display:flex; justify-content:center; align-items:center; min-height:70vh;">
+        <img src="/view-raw/{{ file.id }}"
+             alt="{{ file.filename }}"
+             style="max-width:100%; max-height:75vh; border-radius:.9rem; object-fit:contain;">
+      </div>
+    {% elif media_type == "video" %}
+      <div style="display:flex; justify-content:center; align-items:center; min-height:70vh;">
+        <video controls preload="metadata" style="width:100%; max-height:75vh; border-radius:.9rem; background:black;">
+          <source src="/view-raw/{{ file.id }}">
+          Your browser does not support inline video playback for this file.
+        </video>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+document.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowLeft" && {{ 'true' if prev_id else 'false' }}) {
+    window.location.href = "/view/{{ prev_id if prev_id else '' }}";
+  }
+  if (e.key === "ArrowRight" && {{ 'true' if next_id else 'false' }}) {
+    window.location.href = "/view/{{ next_id if next_id else '' }}";
+  }
+});
+</script>
+{% endblock %}
