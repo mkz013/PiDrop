@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %} — QR Access{% endblock %}
+
+{% block content %}
+<section style="max-width:900px; margin:0 auto; padding:2rem 0 3rem;">
+  <div style="text-align:center; margin-bottom:2rem;">
+    <p style="color:var(--primary); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; margin-bottom:.5rem;">
+      Mobile Access
+    </p>
+    <h1 style="font-size:clamp(2rem, 1.5rem + 1.8vw, 3rem); margin-bottom:.5rem;">
+      Scan to open PiDrop
+    </h1>
+    <p style="color:var(--muted); max-width:60ch; margin:0 auto;">
+      Scan this QR code from your phone while connected to the same Wi-Fi network.
+      It opens the upload page directly in the mobile browser.
+    </p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1.2fr .8fr; gap:1.25rem; align-items:start;">
+    <div class="card" style="padding:2rem; text-align:center;">
+      <img src="/qr-image" alt="PiDrop upload QR code"
+           style="width:320px; max-width:100%; margin:0 auto 1rem; border-radius:1rem; background:white; padding:1rem;">
+      <p style="font-size:.92rem; color:var(--muted);">
+        Scan with iPhone or Android camera.
+      </p>
+    </div>
+
+    <aside class="card" style="padding:1.5rem;">
+      <h3 style="margin-bottom:.75rem;">Direct link</h3>
+      <div style="padding:.9rem 1rem; background:var(--surface2); border:1px solid var(--border);
+                  border-radius:.8rem; word-break:break-all; font-size:.88rem;">
+        {{ upload_url }}
+      </div>
+
+      <div style="height:1px; background:var(--border); margin:1.25rem 0;"></div>
+
+      <h3 style="margin-bottom:.75rem;">Requirements</h3>
+      <ul style="padding-left:1rem; color:var(--muted); font-size:.9rem;">
+        <li>Phone must be on the same local network.</li>
+        <li>PiDrop must be running.</li>
+        <li>Use the Pi LAN IP, not 127.0.0.1.</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+{% endblock %}

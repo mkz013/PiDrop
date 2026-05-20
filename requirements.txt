@@ -6,3 +6,4 @@ python-magic
 qrcode[pil]
 bcrypt
 gunicorn
+itsdangerous
